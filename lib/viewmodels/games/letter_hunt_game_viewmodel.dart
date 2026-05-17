@@ -116,10 +116,15 @@ class LetterHuntViewModel extends ChangeNotifier {
     await repo.saveProgress(
       studentId!,
       StudentGameProgress(
+        gameId: "Letter Hunt",
         currentLevel: currentLevel,
         score: score,
+        totalLevels: 26,
+        accuracy: ((score / 260) * 100).clamp(0, 100),
+        totalRetries: getTotalRetries(),
         completedLevels: List.generate(currentLevel, (i) => "Level ${i + 1}"),
         retries: retries,
+        lastUpdated: DateTime.now(),
       ),
     );
   }

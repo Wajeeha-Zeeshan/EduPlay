@@ -115,10 +115,15 @@ class ABCGameViewModel extends ChangeNotifier {
     await _repo.saveProgress(
       studentId!,
       StudentGameProgress(
+        gameId: "ABC Recognition",
         currentLevel: currentLevel,
         score: score,
+        totalLevels: 26,
+        accuracy: ((score / 260) * 100).clamp(0, 100),
+        totalRetries: getTotalRetries(),
         completedLevels: letters.take(currentLevel).toList(),
         retries: retries,
+        lastUpdated: DateTime.now(),
       ),
     );
   }

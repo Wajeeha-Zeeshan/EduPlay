@@ -171,10 +171,15 @@ class WordMatchViewModel extends ChangeNotifier {
     await repo.saveProgress(
       studentId!,
       StudentGameProgress(
+        gameId: "Word Match",
         currentLevel: currentLevel,
         score: score,
+        totalLevels: 10,
+        accuracy: ((score / 100) * 100).clamp(0, 100),
+        totalRetries: getTotalRetries(),
         completedLevels: List.generate(currentLevel, (i) => "Level ${i + 1}"),
         retries: retries,
+        lastUpdated: DateTime.now(),
       ),
     );
   }

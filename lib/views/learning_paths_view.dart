@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../repositories/student_repository.dart';
-import '../models/student_model.dart';
+import '../repositories/ai_repository.dart';
+import '../viewmodels/learning_path_viewmodel.dart';
 import 'learning_paths_detail_view.dart';
 
 const Color kPrimary = Color(0xFFFFB300);
@@ -35,11 +38,14 @@ class LearningPathsPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.timeline, size: 70, color: kPrimary),
+
                   const SizedBox(height: 20),
+
                   const Text(
                     "Enter Student ID",
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 12),
 
                   TextField(
@@ -76,29 +82,69 @@ class LearningPathsPage extends StatelessWidget {
                           return;
                         }
 
-                        final repo = StudentRepository();
-                        final exists = await repo.studentExists(studentId);
+                        try {
+                          final repo = StudentRepository();
+                          final exists = await repo.studentExists(studentId);
 
-                        if (!exists) {
+                          if (!exists) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Student not found"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Show Loading Dialog
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder:
+                                (_) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                          );
+
+                          debugPrint("STARTING AI GENERATION");
+
+                          // Generate Learning Path
+                          final aiRepo = AIRepository();
+                          await aiRepo.generateLearningPath(studentId);
+
+                          debugPrint("AI GENERATION COMPLETE");
+
+                          // Close loading dialog
+                          Navigator.pop(context);
+
+                          // Navigate to Detail Page with Provider
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => ChangeNotifierProvider(
+                                    create: (_) => LearningPathViewModel(),
+                                    child: LearningPathsDetailView(
+                                      studentId: studentId,
+                                      isTeacher: isTeacher,
+                                    ),
+                                  ),
+                            ),
+                          );
+                        } catch (e) {
+                          Navigator.pop(
+                            context,
+                          ); // Close loading if error occurs
+
+                          debugPrint("AI ERROR: $e");
+
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Student not found"),
+                            SnackBar(
+                              content: Text("AI Error: $e"),
                               backgroundColor: Colors.red,
                             ),
                           );
-                          return;
                         }
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => LearningPathsDetailView(
-                                  studentId: studentId,
-                                  isTeacher: isTeacher,
-                                ),
-                          ),
-                        );
                       },
                       child: const Text("Access Learning Paths"),
                     ),

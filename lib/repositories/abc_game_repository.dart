@@ -15,14 +15,19 @@ class GameRepository {
 
     if (doc.exists && doc.data() != null) {
       return StudentGameProgress.fromMap(doc.data()!);
-    } else {
-      return StudentGameProgress(
-        currentLevel: 0,
-        score: 0,
-        completedLevels: [],
-        retries: {},
-      );
     }
+
+    return StudentGameProgress(
+      gameId: "ABC Recognition",
+      currentLevel: 0,
+      score: 0,
+      totalLevels: 26,
+      accuracy: 0,
+      totalRetries: 0,
+      completedLevels: [],
+      retries: {},
+      lastUpdated: DateTime.now(),
+    );
   }
 
   Future<void> saveProgress(
