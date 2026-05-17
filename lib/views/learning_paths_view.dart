@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../repositories/student_repository.dart';
 import '../repositories/ai_repository.dart';
 import '../viewmodels/learning_path_viewmodel.dart';
@@ -9,15 +8,89 @@ import 'learning_paths_detail_view.dart';
 const Color kPrimary = Color(0xFFFFB300);
 const Color kBg = Color(0xFFE0F7FA);
 
-class LearningPathsPage extends StatelessWidget {
+class LearningPathsPage extends StatefulWidget {
   final bool isTeacher;
-
   const LearningPathsPage({super.key, required this.isTeacher});
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
+  State<LearningPathsPage> createState() => _LearningPathsPageState();
+}
 
+class _LearningPathsPageState extends State<LearningPathsPage> {
+  final TextEditingController controller = TextEditingController();
+  bool isChecking = false;
+  bool? hasExistingPath;
+  String? currentStudentId;
+
+  Future<void> checkExistingPath(String studentId) async {
+    setState(() => isChecking = true);
+
+    try {
+      final aiRepo = AIRepository();
+      final data = await aiRepo.getLatestLearningPathWithDocId(studentId);
+
+      setState(() {
+        hasExistingPath = data != null;
+        currentStudentId = studentId;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error checking path: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => isChecking = false);
+    }
+  }
+
+  Future<void> generateNewPath(String studentId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final aiRepo = AIRepository();
+      await aiRepo.generateLearningPath(studentId);
+
+      if (mounted) {
+        Navigator.pop(context); // close loader
+        _navigateToDetail(studentId);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to generate: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _navigateToDetail(String studentId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => ChangeNotifierProvider(
+              create: (_) => LearningPathViewModel(),
+              child: LearningPathsDetailView(
+                studentId: studentId,
+                isTeacher: widget.isTeacher,
+              ),
+            ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
@@ -38,14 +111,11 @@ class LearningPathsPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.timeline, size: 70, color: kPrimary),
-
                   const SizedBox(height: 20),
-
                   const Text(
                     "Enter Student ID",
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 12),
 
                   TextField(
@@ -61,31 +131,31 @@ class LearningPathsPage extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () async {
-                        final studentId = controller.text.trim();
+                  if (isChecking)
+                    const CircularProgressIndicator()
+                  else if (hasExistingPath == null)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () async {
+                          final studentId = controller.text.trim();
+                          if (studentId.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Please enter Student ID"),
+                              ),
+                            );
+                            return;
+                          }
 
-                        if (studentId.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Please enter Student ID"),
-                            ),
-                          );
-                          return;
-                        }
-
-                        try {
                           final repo = StudentRepository();
                           final exists = await repo.studentExists(studentId);
-
                           if (!exists) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -96,59 +166,50 @@ class LearningPathsPage extends StatelessWidget {
                             return;
                           }
 
-                          // Show Loading Dialog
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder:
-                                (_) => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                          );
-
-                          debugPrint("STARTING AI GENERATION");
-
-                          // Generate Learning Path
-                          final aiRepo = AIRepository();
-                          await aiRepo.generateLearningPath(studentId);
-
-                          debugPrint("AI GENERATION COMPLETE");
-
-                          // Close loading dialog
-                          Navigator.pop(context);
-
-                          // Navigate to Detail Page with Provider
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => ChangeNotifierProvider(
-                                    create: (_) => LearningPathViewModel(),
-                                    child: LearningPathsDetailView(
-                                      studentId: studentId,
-                                      isTeacher: isTeacher,
-                                    ),
-                                  ),
-                            ),
-                          );
-                        } catch (e) {
-                          Navigator.pop(
-                            context,
-                          ); // Close loading if error occurs
-
-                          debugPrint("AI ERROR: $e");
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("AI Error: $e"),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      child: const Text("Access Learning Paths"),
-                    ),
-                  ),
+                          await checkExistingPath(studentId);
+                        },
+                        child: const Text("Check Learning Path"),
+                      ),
+                    )
+                  else ...[
+                    if (hasExistingPath == true) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () => _navigateToDetail(currentStudentId!),
+                          child: const Text("View Latest Learning Path"),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kPrimary,
+                            side: const BorderSide(color: kPrimary, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () => generateNewPath(currentStudentId!),
+                          child: const Text("Generate New Version"),
+                        ),
+                      ),
+                    ] else
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () => generateNewPath(currentStudentId!),
+                          child: const Text("Generate Learning Path"),
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ),

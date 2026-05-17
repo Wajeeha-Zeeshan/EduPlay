@@ -66,4 +66,20 @@ class LearningPathViewModel extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  Future<void> generateNewPath(String studentId) async {
+    isLoading = true;
+    notifyListeners();
+
+    final result = await repo.generateLearningPath(studentId);
+    learningPath = result;
+    // Reload docId after generation
+    final data = await repo.getLatestLearningPathWithDocId(studentId);
+    if (data != null) {
+      currentDocId = data['docId'];
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
 }
