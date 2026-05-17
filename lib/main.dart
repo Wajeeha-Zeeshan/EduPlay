@@ -6,10 +6,12 @@ import 'views/dashboard_view.dart';
 import 'views/login_view.dart';
 import 'views/teacher_dashboard_view.dart';
 import 'views/parent_dashboard_view.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
