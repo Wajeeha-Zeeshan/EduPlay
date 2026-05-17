@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/learning_path_viewmodel.dart';
 
+const Color kBg = Color(0xFFFFF4D4);
 const Color kPrimary = Color(0xFFFFB300);
+const Color kPrimaryDark = Color(0xFFFB8C00);
+const Color kText = Color(0xFF2C3E50);
+const Color kHint = Color(0xFF757575);
+const Color kWhite = Colors.white;
 
 class LearningPathsDetailView extends StatefulWidget {
   final String studentId;
@@ -25,7 +30,6 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LearningPathViewModel>().loadLearningPathWithDoc(
         widget.studentId,
@@ -34,61 +38,89 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
   }
 
   @override
+  void dispose() {
+    _editController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<LearningPathViewModel>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
-
+      backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: kPrimary,
-        foregroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: kWhite),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           "Learning Path (${widget.studentId})",
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.w700, color: kWhite),
         ),
-
-        actions:
-            widget.isTeacher
-                ? [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: "Edit Learning Path",
-                    onPressed: () => _showEditDialog(context, viewModel),
-                  ),
-
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-
-                    tooltip: "Delete Learning Path",
-
-                    onPressed: () => _showDeleteDialog(context, viewModel),
-                  ),
-                ]
-                : null,
+        centerTitle: true,
       ),
-
       body:
           viewModel.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(color: kPrimary))
               : viewModel.learningPath == "No learning path found yet." ||
                   viewModel.learningPath.isEmpty
               ? const Center(
                 child: Text(
                   "No learning path found yet.\nPlease try again.",
-
                   textAlign: TextAlign.center,
-
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(fontSize: 16, color: kHint),
                 ),
               )
-              : ListView(
-                padding: const EdgeInsets.all(16),
-
-                children: _buildFormattedSections(viewModel.learningPath),
+              : SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: kWhite,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 25,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: _buildFormattedSections(
+                          viewModel.learningPath,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    if (widget.isTeacher)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _secondaryButton(
+                              label: "Edit",
+                              onPressed:
+                                  () => _showEditDialog(context, viewModel),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _dangerButton(
+                              label: "Delete",
+                              onPressed:
+                                  () => _showDeleteDialog(context, viewModel),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
     );
   }
@@ -102,90 +134,45 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
 
     final lines =
         text.split('\n').where((line) => line.trim().isNotEmpty).toList();
-
     final List<Widget> widgets = [];
 
     for (String line in lines) {
       line = line.trim();
 
-      // SECTION TITLES
       if (line.endsWith(":")) {
         widgets.add(
           Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 14),
-
+            padding: const EdgeInsets.only(bottom: 16, top: 8),
             child: Text(
               line.replaceAll(":", ""),
-
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: kText,
               ),
             ),
           ),
         );
-
         continue;
       }
 
-      // BULLET ITEMS
       if (line.startsWith("-")) {
         final content = line.replaceFirst("-", "").trim();
-
         widgets.add(
-          Container(
-            margin: const EdgeInsets.only(bottom: 14),
-
-            padding: const EdgeInsets.all(18),
-
-            decoration: BoxDecoration(
-              color: Colors.white,
-
-              borderRadius: BorderRadius.circular(22),
-
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-
-                  blurRadius: 10,
-
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3CD),
-
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.orange,
-                    size: 22,
-                  ),
-                ),
-
-                const SizedBox(width: 14),
-
+                const Icon(Icons.auto_awesome, color: kPrimary, size: 22),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     content,
-
                     style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.8,
-                      color: Colors.black87,
+                      fontSize: 16.5,
+                      height: 1.7,
+                      color: kText,
                     ),
                   ),
                 ),
@@ -193,41 +180,15 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
             ),
           ),
         );
-
         continue;
       }
 
-      // NORMAL TEXT CARD
       widgets.add(
-        Container(
-          margin: const EdgeInsets.only(bottom: 14),
-
-          padding: const EdgeInsets.all(18),
-
-          decoration: BoxDecoration(
-            color: Colors.white,
-
-            borderRadius: BorderRadius.circular(22),
-
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-
-                blurRadius: 10,
-
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-
+        Padding(
+          padding: const EdgeInsets.only(bottom: 18),
           child: Text(
             line,
-
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.8,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 16.5, height: 1.7, color: kText),
           ),
         ),
       );
@@ -236,61 +197,177 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
     return widgets;
   }
 
+  Widget _secondaryButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      height: 58,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: kPrimary,
+          side: const BorderSide(color: kPrimary, width: 2.4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+  Widget _dangerButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      height: 58,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.redAccent,
+          side: const BorderSide(color: Colors.redAccent, width: 2.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
   void _showEditDialog(BuildContext context, LearningPathViewModel viewModel) {
     _editController.text = viewModel.learningPath;
 
     showDialog(
       context: context,
-
       builder:
-          (context) => AlertDialog(
+          (context) => Dialog(
+            backgroundColor: kWhite,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(28),
             ),
-
-            title: const Text("Edit Learning Path"),
-
-            content: SizedBox(
-              width: double.maxFinite,
-
-              child: TextField(
-                controller: _editController,
-
-                maxLines: 20,
-
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-
-                  hintText: "Edit the learning path here...",
-                ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Text(
+                      "Edit Learning Path",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: kWhite,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _editController,
+                    maxLines: 18,
+                    decoration: InputDecoration(
+                      hintText: "Enter learning path content...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(
+                          color: kPrimary,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: kPrimary, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimary,
+                              side: const BorderSide(color: kPrimary, width: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimary,
+                              foregroundColor: kWhite,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              final newText = _editController.text.trim();
+                              if (newText.isNotEmpty) {
+                                viewModel.updateLearningPath(newText);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Learning Path Updated Successfully!",
+                                    ),
+                                    backgroundColor: kPrimary,
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text(
+                              "Save",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-
-                child: const Text("Cancel"),
-              ),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-
-                onPressed: () {
-                  Navigator.pop(context);
-
-                  if (_editController.text.trim().isNotEmpty) {
-                    viewModel.updateLearningPath(_editController.text.trim());
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("✅ Learning Path Updated")),
-                    );
-                  }
-                },
-
-                child: const Text("Save Changes"),
-              ),
-            ],
           ),
     );
   }
@@ -301,38 +378,98 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
   ) {
     showDialog(
       context: context,
-
       builder:
           (context) => AlertDialog(
+            backgroundColor: kWhite,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(28),
             ),
-
-            title: const Text("Delete Learning Path?"),
-
-            content: const Text("This action cannot be undone."),
-
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-
-                child: const Text("Cancel"),
-              ),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-
-                onPressed: () {
-                  Navigator.pop(context);
-
-                  viewModel.deleteLearningPath(widget.studentId);
-
-                  Navigator.pop(context);
-                },
-
-                child: const Text("Delete"),
-              ),
-            ],
+            contentPadding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 24,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    "Delete Learning Path?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: kWhite,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  "This action cannot be undone.\nAre you sure?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, height: 1.5),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kPrimary,
+                            side: const BorderSide(color: kPrimary, width: 2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: kWhite,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            viewModel.deleteLearningPath(widget.studentId);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Learning Path Deleted"),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Delete",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
     );
   }
