@@ -174,17 +174,6 @@ class ParentDashboardPage extends StatelessWidget {
                     iconColor: const Color(0xFF43A047),
                     onTap: () {
                       if (studentId.isEmpty) return;
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => ReportsDetailView(
-                                studentId: studentId,
-                                isTeacher: false,
-                              ),
-                        ),
-                      );
                     },
                   ),
                 ],

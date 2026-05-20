@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../repositories/ai_repository.dart';
+import '../repositories/learning_path_repository.dart';
 
 class LearningPathViewModel extends ChangeNotifier {
   final AIRepository repo = AIRepository();

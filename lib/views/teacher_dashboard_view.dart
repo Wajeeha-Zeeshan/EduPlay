@@ -149,7 +149,8 @@ class TeacherDashboardPage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (context) => const ReportsPage(isTeacher: true),
+                              (context) =>
+                                  const ProgressReportsPage(isTeacher: true),
                         ),
                       );
                     },

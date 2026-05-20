@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../repositories/student_repository.dart';
-import '../repositories/ai_repository.dart';
+import '../repositories/learning_path_repository.dart';
 import '../viewmodels/learning_path_viewmodel.dart';
 import 'learning_paths_detail_view.dart';
 
