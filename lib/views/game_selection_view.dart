@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import '../repositories/game_repository.dart';
+
 import '../models/game_model.dart';
+import '../models/student_model.dart';
+
+import '../repositories/game_repository.dart';
+import '../repositories/student_repository.dart';
 
 import '../views/games/abc_game_view.dart';
 import '../views/games/letter_hunt_view.dart';
 import '../views/games/word__match_game_view.dart';
 
-const Color kBg = Color(0xFFE0F7FA);
+const Color kBg = Color(0xFFFFF4D4);
 const Color kPrimary = Color(0xFFFFB300);
 const Color kWhite = Colors.white;
 
@@ -20,30 +24,63 @@ class GameSelectionPage extends StatefulWidget {
 }
 
 class _GameSelectionPageState extends State<GameSelectionPage> {
-  final GameRepository _repo = GameRepository();
+  final GameRepository _gameRepo = GameRepository();
+
+  final StudentRepository _studentRepo = StudentRepository();
+
   late List<Game> games;
 
-  int? expandedIndex;
+  Student? student;
+
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    games = _repo.getGames();
+
+    games = _gameRepo.getGames();
+
+    _loadStudent();
+  }
+
+  Future<void> _loadStudent() async {
+    student = await _studentRepo.getStudent(widget.studentId);
+
+    setState(() {
+      loading = false;
+    });
+  }
+
+  bool canAccessGame(String gameId) {
+    if (student == null) {
+      return false;
+    }
+
+    if (!student!.initialGameCompleted) {
+      return gameId == student!.assignedGame;
+    }
+
+    return true;
   }
 
   void _openGame(Game game) {
     Widget page;
 
-    switch (game.type) {
-      case GameType.abcRecognition:
-        page = ABCGamePage(studentId: widget.studentId);
+    switch (game.id) {
+      case "abc_recognition":
+        page = ABCGamePage(studentId: student!.studentID);
         break;
-      case GameType.letterHunt:
-        page = LetterHuntPage(studentId: widget.studentId);
+
+      case "letter_hunt":
+        page = LetterHuntPage(studentId: student!.studentID);
         break;
-      case GameType.wordMatch:
-        page = WordMatchPage(studentId: widget.studentId);
+
+      case "word_match":
+        page = WordMatchPage(studentId: student!.studentID);
         break;
+
+      default:
+        page = const Scaffold(body: Center(child: Text("Game not found")));
     }
 
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
@@ -51,172 +88,151 @@ class _GameSelectionPageState extends State<GameSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       backgroundColor: kBg,
+
       appBar: AppBar(
         backgroundColor: kPrimary,
-        elevation: 0,
         iconTheme: const IconThemeData(color: kWhite),
-        title: const Text(
-          "Choose a Game",
-          style: TextStyle(
-            color: kWhite,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+
+        title: Text(
+          "Welcome ${student?.name ?? ''}",
+          style: const TextStyle(color: kWhite, fontWeight: FontWeight.bold),
         ),
       ),
-      body: SafeArea(
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          itemCount: games.length,
-          itemBuilder: (context, index) {
-            final game = games[index];
-            final isExpanded = expandedIndex == index;
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [kPrimary, Color(0xFFFFD74F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: kPrimary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(24),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: () {
-                    setState(() {
-                      expandedIndex = isExpanded ? null : index;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // HEADER
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: kWhite,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(game.icon, color: kPrimary, size: 28),
-                            ),
-                            const SizedBox(width: 16),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(20),
 
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    game.title,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                      color: kWhite,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Tap to ${isExpanded ? "hide" : "play"} details",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: kWhite.withOpacity(0.85),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+        itemCount: games.length,
 
-                            Icon(
-                              isExpanded
-                                  ? Icons.keyboard_arrow_up
-                                  : Icons.keyboard_arrow_down,
-                              color: kWhite,
-                              size: 28,
-                            ),
-                          ],
+        itemBuilder: (context, index) {
+          final game = games[index];
+
+          final accessible = canAccessGame(game.id);
+
+          final isAssignedGame = game.id == student?.assignedGame;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 20),
+
+            padding: const EdgeInsets.all(20),
+
+            decoration: BoxDecoration(
+              color: accessible ? kPrimary : Colors.grey.shade400,
+
+              borderRadius: BorderRadius.circular(20),
+            ),
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+
+              children: [
+                Row(
+                  children: [
+                    Icon(game.icon, color: kWhite, size: 30),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: Text(
+                        game.title,
+
+                        style: const TextStyle(
+                          color: kWhite,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                    ),
+                  ],
+                ),
 
-                        // EXPANDED SECTION
-                        if (isExpanded) ...[
-                          const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: kWhite,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  game.description,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.grey[700],
-                                    height: 1.5,
-                                  ),
-                                ),
+                Text(
+                  game.description,
 
-                                const SizedBox(height: 16),
+                  style: const TextStyle(color: kWhite, height: 1.4),
+                ),
 
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: kPrimary,
-                                          foregroundColor: kWhite,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: () => _openGame(game),
-                                        child: const Text(
-                                          "Play Now",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
+                const SizedBox(height: 16),
+
+                if (isAssignedGame && !student!.initialGameCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+
+                    child: const Text(
+                      "Assigned Initial Game",
+
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kWhite,
+
+                      foregroundColor: kPrimary,
+
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+
+                    onPressed:
+                        accessible
+                            ? () async {
+                              if (!student!.initialGameCompleted &&
+                                  game.id == student!.assignedGame) {
+                                await _studentRepo.completeInitialGame(
+                                  student!.studentID,
+                                );
+
+                                await _loadStudent();
+                              }
+
+                              _openGame(game);
+                            }
+                            : null,
+
+                    child: Text(
+                      accessible ? "Play Game" : "Locked",
+
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

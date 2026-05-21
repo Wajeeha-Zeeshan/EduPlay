@@ -4,6 +4,8 @@ class Student {
   final int age;
   final String section;
   final String studentClass;
+  final String assignedGame;
+  final bool initialGameCompleted;
 
   Student({
     required this.studentID,
@@ -11,6 +13,9 @@ class Student {
     required this.age,
     required this.section,
     required this.studentClass,
+
+    this.assignedGame = '',
+    this.initialGameCompleted = false,
   });
 
   Map<String, dynamic> toMap() => {
@@ -19,6 +24,9 @@ class Student {
     'age': age,
     'section': section,
     'studentClass': studentClass,
+
+    'assignedGame': assignedGame,
+    'initialGameCompleted': initialGameCompleted,
   };
 
   factory Student.fromMap(Map<String, dynamic> map) => Student(
@@ -27,5 +35,8 @@ class Student {
     age: map['age'] ?? 0,
     section: map['section'] ?? '',
     studentClass: map['studentClass'] ?? '',
+    assignedGame: map['assignedGame'] ?? '',
+
+    initialGameCompleted: map['initialGameCompleted'] ?? false,
   );
 }

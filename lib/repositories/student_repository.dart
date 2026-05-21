@@ -56,4 +56,21 @@ class StudentRepository {
 
     await docRef.delete();
   }
+
+  Future<void> assignInitialGame({
+    required String studentId,
+    required String gameId,
+  }) async {
+    await _firestore.collection('students').doc(studentId).update({
+      'assignedGame': gameId,
+
+      'initialGameCompleted': false,
+    });
+  }
+
+  Future<void> completeInitialGame(String studentId) async {
+    await _firestore.collection('students').doc(studentId).update({
+      'initialGameCompleted': true,
+    });
+  }
 }
