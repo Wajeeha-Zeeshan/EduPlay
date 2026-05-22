@@ -31,7 +31,7 @@ class GameRepository {
 
         type: GameType.letterHunt,
 
-        totalLevels: 26,
+        totalLevels: 30,
       ),
 
       Game(
@@ -46,7 +46,7 @@ class GameRepository {
 
         type: GameType.wordMatch,
 
-        totalLevels: 10,
+        totalLevels: 20,
       ),
     ];
   }

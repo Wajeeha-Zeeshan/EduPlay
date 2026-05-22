@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../models/learning_path_model.dart';
 
 class AIRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -14,83 +15,33 @@ class AIRepository {
     model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
   }
 
-  Future<String> generateLearningPath(String studentId) async {
+  Future<String> generateLearningPath(
+    String studentId, {
+    String? teacherId,
+  }) async {
     try {
-      print("AI FUNCTION STARTED");
+      print("AI FUNCTION STARTED for student: $studentId");
 
       final performance = await _fetchStudentPerformance(studentId);
-
-      final prompt = '''
-You are an expert AI educational assistant for a preschool literacy learning app.
-
-The app contains ONLY these 3 educational games:
-
-1. ABC Recognition Game
-   - Students match uppercase and lowercase letters
-   - Focus: Letter recognition skills
-
-2. Letter Hunt
-   - Students identify the next letter in alphabetical order
-   - Focus: Alphabet sequencing skills
-
-3. Word Match
-   - Students match words with images
-   - Focus: Vocabulary and word association
-
-A student has played one or more games. Here is their complete performance data:
-
-$performance
-
-IMPORTANT RULES:
-- Analyze ALL games the student has played.
-- Recommend ONLY games from the list above.
-- Do NOT invent new games.
-- Keep response short, clear and structured.
-- Do NOT use markdown symbols like *, #, **.
-- Use simple teacher-friendly language.
-- If student performs well in ABC Recognition → suggest Letter Hunt.
-- If student performs well in Letter Hunt → suggest Word Match.
-- If struggling in any game → recommend revising that game first.
-
-Return EXACTLY in this format:
-
-Strengths:
-- point 1
-- point 2
-
-Weaknesses:
-- point 1
-- point 2
-
-Next Recommended Game:
-- game name
-- reason
-
-Recommended Activities:
-- activity 1
-- activity 2
-
-Teacher Guidance:
-- guidance
-
-Student Performance:
-$performance
-''';
+      final prompt =
+          ''' You are an expert AI educational assistant for a preschool literacy learning app. The app contains ONLY these 3 educational games: 1. ABC Recognition Game - Students match uppercase and lowercase letters - Focus: Letter recognition skills 2. Letter Hunt - Students identify the next letter in alphabetical order - Focus: Alphabet sequencing skills 3. Word Match - Students match words with images - Focus: Vocabulary and word association A student has played one or more games. Here is their complete performance data: $performance IMPORTANT RULES: - Analyze ALL games the student has played. - Recommend ONLY games from the list above. - Do NOT invent new games. - Keep response short, clear and structured. - Do NOT use markdown symbols like *, #, **. - Use simple teacher-friendly language. - If student performs well in ABC Recognition → suggest Letter Hunt. - If student performs well in Letter Hunt → suggest Word Match. - If struggling in any game → recommend revising that game first. Return EXACTLY in this format: Strengths: - point 1 - point 2 Weaknesses: - point 1 - point 2 Next Recommended Game: - game name - reason Recommended Activities: - activity 1 - activity 2 Teacher Guidance: - guidance Student Performance: $performance ''';
 
       final response = await model.generateContent([Content.text(prompt)]);
       final generatedText = response.text?.trim() ?? "No response generated.";
 
-      print("AI RESPONSE RECEIVED");
-
-      // Save to Firestore
+      // Save with approval status (default false)
       final docRef = await _db.collection('learningPaths').add({
         'studentId': studentId,
         'generatedPath': generatedText,
         'createdAt': Timestamp.now(),
+        'updatedAt': null,
+        'isApproved': false,
+        'approvedBy': null,
+        'approvedAt': null,
         'modelUsed': 'gemini-2.5-flash',
       });
 
-      print("DOCUMENT SAVED: ${docRef.id}");
+      print("Learning path created: ${docRef.id}");
       return generatedText;
     } catch (e, stack) {
       print("ERROR in generateLearningPath: $e");
@@ -112,7 +63,7 @@ $performance
         return "No performance data available yet.";
       }
 
-      StringBuffer buffer = StringBuffer();
+      final buffer = StringBuffer();
       buffer.writeln("=== STUDENT PERFORMANCE SUMMARY ===\n");
 
       for (var doc in snapshot.docs) {
@@ -129,7 +80,6 @@ $performance
         }
         buffer.writeln("---\n");
       }
-
       return buffer.toString();
     } catch (e) {
       print("FETCH PERFORMANCE ERROR: $e");
@@ -137,9 +87,9 @@ $performance
     }
   }
 
-  Future<Map<String, dynamic>?> getLatestLearningPathWithDocId(
-    String studentId,
-  ) async {
+  // NEW: Get latest learning path with full details
+
+  Future<LearningPathModel?> getLatestLearningPath(String studentId) async {
     try {
       final snapshot =
           await _db
@@ -152,10 +102,26 @@ $performance
       if (snapshot.docs.isEmpty) return null;
 
       final doc = snapshot.docs.first;
-      return {'docId': doc.id, 'generatedPath': doc['generatedPath']};
+      return LearningPathModel.fromMap(doc.id, doc.data());
     } catch (e) {
       print("GET LATEST PATH ERROR: $e");
       return null;
+    }
+  }
+
+  // NEW: Approve learning path (Teacher only)
+  Future<void> approveLearningPath(String docId, String teacherId) async {
+    try {
+      await _db.collection('learningPaths').doc(docId).update({
+        'isApproved': true,
+        'approvedBy': teacherId,
+        'approvedAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      });
+      print("Learning path approved by teacher: $teacherId");
+    } catch (e) {
+      print("APPROVE ERROR: $e");
+      rethrow;
     }
   }
 
@@ -165,7 +131,6 @@ $performance
         'generatedPath': newContent,
         'updatedAt': Timestamp.now(),
       });
-      print("LEARNING PATH UPDATED");
     } catch (e) {
       print("UPDATE ERROR: $e");
       rethrow;
@@ -184,7 +149,6 @@ $performance
 
       if (snapshot.docs.isNotEmpty) {
         await snapshot.docs.first.reference.delete();
-        print("LEARNING PATH DELETED");
       }
     } catch (e) {
       print("DELETE ERROR: $e");

@@ -21,7 +21,7 @@ class LetterHuntRepository {
       gameId: "Letter Hunt",
       currentLevel: 0,
       score: 0,
-      totalLevels: 26,
+      totalLevels: 30,
       accuracy: 0,
       totalRetries: 0,
       completedLevels: [],

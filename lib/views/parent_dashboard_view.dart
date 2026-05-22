@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 import '../repositories/user_repository.dart';
 import '../models/user_model.dart';
@@ -9,9 +10,10 @@ import 'profile_view.dart';
 import '../views/learning_activities_view.dart';
 import 'student_profile_parent_view.dart';
 
-// 👉 NEW PAGES (you will create these)
 import 'learning_paths_detail_view.dart';
+import '../viewmodels/learning_path_viewmodel.dart';
 import 'reports_detail_view.dart';
+import '../viewmodels/progress_report_viewmodel.dart';
 
 class ParentDashboardPage extends StatelessWidget {
   const ParentDashboardPage({super.key});
@@ -33,7 +35,6 @@ class ParentDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE0F7FA),
-
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFB300),
         elevation: 0,
@@ -68,11 +69,9 @@ class ParentDashboardPage extends StatelessWidget {
           ),
         ],
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-
           child: FutureBuilder<AppUser?>(
             future: _loadCurrentUser(),
             builder: (context, snapshot) {
@@ -95,18 +94,22 @@ class ParentDashboardPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildWelcomeCard(displayName),
-
                   const SizedBox(height: 50),
 
-                  // ---------------- CHILD PROFILE ----------------
+                  // Child Profile
                   _buildMenuCard(
                     title: 'Child Profile',
                     description: 'View your child\'s details',
                     icon: Icons.child_care,
                     iconColor: const Color(0xFF00ACC1),
                     onTap: () {
-                      if (studentId.isEmpty) return;
-
+                      if (studentId.isEmpty) {
+                        _showSnackBar(
+                          context,
+                          "No student linked to this account",
+                        );
+                        return;
+                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -121,7 +124,7 @@ class ParentDashboardPage extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ---------------- ACTIVITIES ----------------
+                  // Learning Activities
                   _buildMenuCard(
                     title: 'Learning Activities',
                     description: 'View educational games',
@@ -142,22 +145,32 @@ class ParentDashboardPage extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ---------------- LEARNING PATHS ----------------
+                  // LEARNING PATHS
                   _buildMenuCard(
                     title: 'Learning Paths',
-                    description: 'View learning journey',
+                    description: 'View learning journey & recommendations',
                     icon: Icons.timeline,
                     iconColor: const Color(0xFFE53935),
                     onTap: () {
-                      if (studentId.isEmpty) return;
+                      if (studentId.isEmpty) {
+                        _showSnackBar(
+                          context,
+                          "No student linked to this account",
+                        );
+                        return;
+                      }
 
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder:
-                              (_) => LearningPathsDetailView(
-                                studentId: studentId,
-                                isTeacher: false, // 👈 parent = VIEW ONLY
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => LearningPathViewModel(),
+                                child: LearningPathsDetailView(
+                                  studentId: studentId,
+                                  isTeacher: false,
+                                  currentUserId: null,
+                                ),
                               ),
                         ),
                       );
@@ -166,14 +179,34 @@ class ParentDashboardPage extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ---------------- PROGRESS REPORTS ----------------
+                  // PROGRESS REPORTS - Fully Integrated
                   _buildMenuCard(
                     title: 'Progress Reports',
-                    description: 'View progress reports',
+                    description: 'View detailed AI progress reports',
                     icon: Icons.menu_book,
                     iconColor: const Color(0xFF43A047),
                     onTap: () {
-                      if (studentId.isEmpty) return;
+                      if (studentId.isEmpty) {
+                        _showSnackBar(
+                          context,
+                          "No student linked to this account",
+                        );
+                        return;
+                      }
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ChangeNotifierProvider(
+                                create: (_) => ProgressReportViewModel(),
+                                child: ProgressReportDetailView(
+                                  studentId: studentId,
+                                  isTeacher: false,
+                                ),
+                              ),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -185,7 +218,16 @@ class ParentDashboardPage extends StatelessWidget {
     );
   }
 
-  // ---------------- WELCOME CARD (UNCHANGED STYLE) ----------------
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Widget _buildWelcomeCard(String displayName) {
     return Container(
       width: double.infinity,
@@ -230,13 +272,12 @@ class ParentDashboardPage extends StatelessWidget {
     );
   }
 
-  // ---------------- MENU CARD (YOUR ORIGINAL DESIGN KEPT) ----------------
   Widget _buildMenuCard({
     required String title,
     required String description,
     required IconData icon,
     required Color iconColor,
-    VoidCallback? onTap,
+    required VoidCallback onTap,
   }) {
     return Container(
       width: double.infinity,

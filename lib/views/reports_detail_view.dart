@@ -1,12 +1,9 @@
-// =========================== progress_report_detail_view.dart ===========================
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/progress_report_viewmodel.dart';
 
 const Color kBg = Color(0xFFFFF4D4);
 const Color kPrimary = Color(0xFFFFB300);
-const Color kPrimaryDark = Color(0xFFFB8C00);
 const Color kText = Color(0xFF2C3E50);
 const Color kHint = Color(0xFF757575);
 const Color kWhite = Colors.white;
@@ -14,11 +11,13 @@ const Color kWhite = Colors.white;
 class ProgressReportDetailView extends StatefulWidget {
   final String studentId;
   final bool isTeacher;
+  final String? currentUserId;
 
   const ProgressReportDetailView({
     super.key,
     required this.studentId,
     required this.isTeacher,
+    this.currentUserId,
   });
 
   @override
@@ -47,6 +46,36 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
   Widget build(BuildContext context) {
     final vm = context.watch<ProgressReportViewModel>();
 
+    // Parent Access Control
+    if (!widget.isTeacher && !vm.isApproved) {
+      return Scaffold(
+        backgroundColor: kBg,
+        appBar: AppBar(
+          backgroundColor: kPrimary,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: kWhite),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            "Progress Report (${widget.studentId})",
+            style: const TextStyle(fontWeight: FontWeight.w700, color: kWhite),
+          ),
+          centerTitle: true,
+        ),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              "Progress Report is pending teacher approval.\n\nPlease check back later.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 17, color: kHint, height: 1.6),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
@@ -69,9 +98,8 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
                 child: Column(
                   children: [
-                    // Overall Stats Card
+                    // Overall Performance Stats
                     Container(
-                      width: double.infinity,
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: kWhite,
@@ -95,29 +123,23 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                               color: kText,
                             ),
                           ),
-
                           const SizedBox(height: 28),
-
                           _buildStatTile(
-                            icon: Icons.analytics_rounded,
-                            title: "Overall Accuracy",
-                            value: "${vm.overallAccuracy}%",
+                            Icons.analytics_rounded,
+                            "Overall Accuracy",
+                            "${vm.overallAccuracy}%",
                           ),
-
                           const SizedBox(height: 18),
-
                           _buildStatTile(
-                            icon: Icons.emoji_events_rounded,
-                            title: "Total Score",
-                            value: "${vm.totalScore}",
+                            Icons.emoji_events_rounded,
+                            "Total Score",
+                            "${vm.totalScore}",
                           ),
-
                           const SizedBox(height: 18),
-
                           _buildStatTile(
-                            icon: Icons.sports_esports_rounded,
-                            title: "Games Played",
-                            value: "${vm.gamesPlayed}",
+                            Icons.sports_esports_rounded,
+                            "Games Played",
+                            "${vm.gamesPlayed}",
                           ),
                         ],
                       ),
@@ -125,9 +147,8 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
 
                     const SizedBox(height: 28),
 
-                    // AI Report Card
+                    // AI Report Content
                     Container(
-                      width: double.infinity,
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: kWhite,
@@ -151,22 +172,19 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                                 size: 26,
                               ),
                               SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  "AI Generated Report",
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: kText,
-                                  ),
+                              Text(
+                                "AI Generated Report",
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: kText,
                                 ),
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 24),
-
-                          if (vm.report.isEmpty)
+                          if (vm.report.isEmpty ||
+                              vm.report == "No report found.")
                             const Center(
                               child: Text(
                                 "No report available yet.",
@@ -175,7 +193,6 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                             )
                           else
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: _buildFormattedSections(vm.report),
                             ),
                         ],
@@ -184,21 +201,30 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
 
                     const SizedBox(height: 40),
 
-                    // Teacher Buttons
+                    // Teacher Controls
                     if (widget.isTeacher)
                       Row(
                         children: [
                           Expanded(
                             child: _secondaryButton(
-                              label: "Edit",
-                              onPressed: () => _showEditDialog(context, vm),
+                              vm.isApproved ? "Approved ✓" : "Approve",
+                              vm.isApproved
+                                  ? null
+                                  : () => _approveReport(context, vm),
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _secondaryButton(
+                              "Edit",
+                              () => _showEditDialog(context, vm),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: _dangerButton(
-                              label: "Delete",
-                              onPressed: () => _showDeleteDialog(context, vm),
+                              "Delete",
+                              () => _showDeleteDialog(context, vm),
                             ),
                           ),
                         ],
@@ -209,11 +235,9 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
     );
   }
 
-  Widget _buildStatTile({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
+  // ==================== HELPER METHODS ====================
+
+  Widget _buildStatTile(IconData icon, String title, String value) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -269,7 +293,6 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
 
     final lines =
         text.split('\n').where((line) => line.trim().isNotEmpty).toList();
-
     final List<Widget> widgets = [];
 
     for (String line in lines) {
@@ -278,7 +301,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
       if (line.endsWith(":")) {
         widgets.add(
           Padding(
-            padding: const EdgeInsets.only(bottom: 16, top: 8),
+            padding: const EdgeInsets.only(bottom: 16, top: 12),
             child: Text(
               line.replaceAll(":", ""),
               style: const TextStyle(
@@ -294,10 +317,9 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
 
       if (line.startsWith("-")) {
         final content = line.replaceFirst("-", "").trim();
-
         widgets.add(
           Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.only(bottom: 14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -308,7 +330,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                     content,
                     style: const TextStyle(
                       fontSize: 16.5,
-                      height: 1.7,
+                      height: 1.65,
                       color: kText,
                     ),
                   ),
@@ -317,28 +339,23 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
             ),
           ),
         );
-
         continue;
       }
 
       widgets.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: const EdgeInsets.only(bottom: 16),
           child: Text(
             line,
-            style: const TextStyle(fontSize: 16.5, height: 1.7, color: kText),
+            style: const TextStyle(fontSize: 16.5, height: 1.65, color: kText),
           ),
         ),
       );
     }
-
     return widgets;
   }
 
-  Widget _secondaryButton({
-    required String label,
-    required VoidCallback onPressed,
-  }) {
+  Widget _secondaryButton(String label, VoidCallback? onPressed) {
     return SizedBox(
       height: 58,
       child: OutlinedButton(
@@ -358,10 +375,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
     );
   }
 
-  Widget _dangerButton({
-    required String label,
-    required VoidCallback onPressed,
-  }) {
+  Widget _dangerButton(String label, VoidCallback onPressed) {
     return SizedBox(
       height: 58,
       child: OutlinedButton(
@@ -379,6 +393,44 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
         ),
       ),
     );
+  }
+
+  void _approveReport(BuildContext context, ProgressReportViewModel vm) async {
+    if (widget.currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Teacher ID not available"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (vm.currentDocId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Document ID not found"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await vm.approveReport(widget.currentUserId!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Progress Report Approved for Parent"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Approve failed: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showEditDialog(BuildContext context, ProgressReportViewModel vm) {
@@ -399,10 +451,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 20,
-                      horizontal: 24,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     decoration: BoxDecoration(
                       color: kPrimary,
                       borderRadius: BorderRadius.circular(16),
@@ -417,23 +466,18 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   TextField(
                     controller: _editController,
-                    maxLines: 18,
+                    maxLines: 16,
                     decoration: InputDecoration(
-                      hintText: "Enter report content...",
+                      hintText: "Edit report content here...",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: kPrimary,
-                          width: 1.5,
-                        ),
+                        borderSide: BorderSide(color: kPrimary, width: 1.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -443,9 +487,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                       fillColor: Colors.grey.shade50,
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   Row(
                     children: [
                       Expanded(
@@ -467,9 +509,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                           ),
                         ),
                       ),
-
                       const SizedBox(width: 16),
-
                       Expanded(
                         child: SizedBox(
                           height: 52,
@@ -480,34 +520,26 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              elevation: 4,
+                              elevation: 3,
                             ),
-                            onPressed: () async {
+                            onPressed: () {
                               final newText = _editController.text.trim();
-
                               if (newText.isNotEmpty) {
-                                await vm.updateReport(newText);
-
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Progress Report Updated Successfully!",
-                                      ),
-                                      backgroundColor: kPrimary,
+                                vm.updateReport(newText);
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Progress Report Updated Successfully!",
                                     ),
-                                  );
-                                }
+                                    backgroundColor: kPrimary,
+                                  ),
+                                );
                               }
                             },
                             child: const Text(
                               "Save",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w700),
                             ),
                           ),
                         ),
@@ -536,10 +568,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 20,
-                    horizontal: 24,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   decoration: BoxDecoration(
                     color: kPrimary,
                     borderRadius: BorderRadius.circular(16),
@@ -554,17 +583,13 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
                 const Text(
                   "This action cannot be undone.\nAre you sure?",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, height: 1.5),
                 ),
-
                 const SizedBox(height: 30),
-
                 Row(
                   children: [
                     Expanded(
@@ -586,9 +611,7 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 16),
-
                     Expanded(
                       child: SizedBox(
                         height: 52,
@@ -600,21 +623,16 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: () async {
+                          onPressed: () {
                             Navigator.pop(context);
-
-                            await vm.deleteReport(widget.studentId);
-
-                            if (context.mounted) {
-                              Navigator.pop(context);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Progress Report Deleted"),
-                                  backgroundColor: Colors.redAccent,
-                                ),
-                              );
-                            }
+                            vm.deleteReport(widget.studentId);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Progress Report Deleted"),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
                           },
                           child: const Text(
                             "Delete",

@@ -9,6 +9,7 @@ import '../repositories/progress_report_repository.dart';
 import '../viewmodels/progress_report_viewmodel.dart';
 
 import 'reports_detail_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 const Color kPrimary = Color(0xFFFFB300);
 const Color kBg = Color(0xFFE0F7FA);
@@ -91,12 +92,16 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
       context,
       MaterialPageRoute(
         builder:
-            (_) => ChangeNotifierProvider(
+            (context) => ChangeNotifierProvider(
               create: (_) => ProgressReportViewModel(),
-
               child: ProgressReportDetailView(
                 studentId: studentId,
-                isTeacher: widget.isTeacher,
+                isTeacher: true,
+                currentUserId:
+                    FirebaseAuth
+                        .instance
+                        .currentUser
+                        ?.uid, // ← Must pass real UID
               ),
             ),
       ),

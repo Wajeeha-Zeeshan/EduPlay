@@ -1,8 +1,7 @@
-// =========================== progress_report_repository.dart ===========================
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import '../models/progress_report_model.dart';
 
 class ProgressReportRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -80,6 +79,9 @@ Conclusion:
         'totalScore': analytics['totalScore'],
         'gamesPlayed': analytics['gamesPlayed'],
         'createdAt': Timestamp.now(),
+        'isApproved': false,
+        'approvedBy': null,
+        'approvedAt': null,
         'modelUsed': 'gemini-2.5-flash',
       });
 
@@ -232,7 +234,7 @@ $gameDetails
     };
   }
 
-  Future<Map<String, dynamic>?> getLatestReport(String studentId) async {
+  Future<ProgressReport?> getLatestReport(String studentId) async {
     try {
       final snapshot =
           await _db
@@ -245,16 +247,25 @@ $gameDetails
       if (snapshot.docs.isEmpty) return null;
 
       final doc = snapshot.docs.first;
-      return {
-        'docId': doc.id,
-        'generatedReport': doc['generatedReport'],
-        'overallAccuracy': doc['overallAccuracy'] ?? '0',
-        'totalScore': doc['totalScore'] ?? 0,
-        'gamesPlayed': doc['gamesPlayed'] ?? 0,
-      };
+      return ProgressReport.fromMap(doc.id, doc.data());
     } catch (e) {
       print("GET REPORT ERROR: $e");
       return null;
+    }
+  }
+
+  Future<void> approveReport(String docId, String teacherId) async {
+    try {
+      await _db.collection('progressReports').doc(docId).update({
+        'isApproved': true,
+        'approvedBy': teacherId,
+        'approvedAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      });
+      print("Report approved: $docId");
+    } catch (e) {
+      print("APPROVE REPORT ERROR: $e");
+      rethrow;
     }
   }
 
@@ -264,6 +275,7 @@ $gameDetails
         'generatedReport': updatedReport,
         'updatedAt': Timestamp.now(),
       });
+      print("Report updated: $docId");
     } catch (e) {
       print("UPDATE REPORT ERROR: $e");
       rethrow;

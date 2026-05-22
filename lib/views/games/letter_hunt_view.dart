@@ -267,7 +267,7 @@ class LetterHuntPage extends StatelessWidget {
   }
 
   Widget _buildProgressBar(LetterHuntViewModel vm) {
-    double progress = (vm.currentLevel + 1) / 26.0;
+    double progress = (vm.currentLevel + 1) / vm.totalLevels;
     int retries = vm.retries["Level${vm.currentLevel + 1}"] ?? 0;
 
     return Container(
@@ -305,7 +305,7 @@ class LetterHuntPage extends StatelessWidget {
                 ],
               ),
               Text(
-                "Level ${vm.currentLevel + 1}/26",
+                "Level ${vm.currentLevel + 1}/${vm.totalLevels}",
                 style: const TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.w700,
@@ -420,7 +420,7 @@ class LetterHuntPage extends StatelessWidget {
                           _buildCuteStatCard(
                             Icons.auto_awesome,
                             "Accuracy",
-                            "${((vm.score / 260) * 100).toStringAsFixed(0)}%",
+                            "${((vm.score / (vm.totalLevels * 10)) * 100).toStringAsFixed(0)}%",
                             Colors.deepOrange,
                           ),
                         ],

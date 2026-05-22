@@ -21,7 +21,7 @@ class WordMatchRepository {
       gameId: "Word Match",
       currentLevel: 0,
       score: 0,
-      totalLevels: 10,
+      totalLevels: 20,
       accuracy: 0,
       totalRetries: 0,
       completedLevels: [],

@@ -1,19 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class LearningPathModel {
-  final String docId; // ← NEW: Important
+class ProgressReport {
+  final String docId;
   final String studentId;
-  final String generatedPath;
+  final String generatedReport;
+  final String overallAccuracy;
+  final int totalScore;
+  final int gamesPlayed;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isApproved;
   final String? approvedBy;
   final DateTime? approvedAt;
 
-  LearningPathModel({
+  ProgressReport({
     required this.docId,
     required this.studentId,
-    required this.generatedPath,
+    required this.generatedReport,
+    required this.overallAccuracy,
+    required this.totalScore,
+    required this.gamesPlayed,
     required this.createdAt,
     this.updatedAt,
     this.isApproved = false,
@@ -21,11 +27,14 @@ class LearningPathModel {
     this.approvedAt,
   });
 
-  factory LearningPathModel.fromMap(String docId, Map<String, dynamic> map) {
-    return LearningPathModel(
+  factory ProgressReport.fromMap(String docId, Map<String, dynamic> map) {
+    return ProgressReport(
       docId: docId,
       studentId: map['studentId'] ?? '',
-      generatedPath: map['generatedPath'] ?? '',
+      generatedReport: map['generatedReport'] ?? '',
+      overallAccuracy: map['overallAccuracy']?.toString() ?? '0',
+      totalScore: map['totalScore'] ?? 0,
+      gamesPlayed: map['gamesPlayed'] ?? 0,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt:
           map['updatedAt'] != null

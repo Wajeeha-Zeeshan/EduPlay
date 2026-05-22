@@ -17,35 +17,39 @@ class LearningPathsPage extends StatefulWidget {
 }
 
 class _LearningPathsPageState extends State<LearningPathsPage> {
-  final TextEditingController controller = TextEditingController();
-  bool isChecking = false;
-  bool? hasExistingPath;
-  String? currentStudentId;
+  final TextEditingController _controller = TextEditingController();
 
-  Future<void> checkExistingPath(String studentId) async {
-    setState(() => isChecking = true);
+  bool _isChecking = false;
+  bool? _hasExistingPath;
+  String? _currentStudentId;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkExistingPath(String studentId) async {
+    setState(() => _isChecking = true);
 
     try {
       final aiRepo = AIRepository();
-      final data = await aiRepo.getLatestLearningPathWithDocId(studentId);
+      final latestPath = await aiRepo.getLatestLearningPath(studentId);
 
       setState(() {
-        hasExistingPath = data != null;
-        currentStudentId = studentId;
+        _hasExistingPath = latestPath != null;
+        _currentStudentId = studentId;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error checking path: $e"),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
       );
     } finally {
-      setState(() => isChecking = false);
+      setState(() => _isChecking = false);
     }
   }
 
-  Future<void> generateNewPath(String studentId) async {
+  Future<void> _generateNewPath(String studentId) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -57,7 +61,7 @@ class _LearningPathsPageState extends State<LearningPathsPage> {
       await aiRepo.generateLearningPath(studentId);
 
       if (mounted) {
-        Navigator.pop(context); // close loader
+        Navigator.pop(context);
         _navigateToDetail(studentId);
       }
     } catch (e) {
@@ -78,15 +82,42 @@ class _LearningPathsPageState extends State<LearningPathsPage> {
       context,
       MaterialPageRoute(
         builder:
-            (_) => ChangeNotifierProvider(
+            (context) => ChangeNotifierProvider(
               create: (_) => LearningPathViewModel(),
               child: LearningPathsDetailView(
                 studentId: studentId,
                 isTeacher: widget.isTeacher,
+                // For teachers only - replace with real auth user ID later
+                currentUserId: widget.isTeacher ? "current_teacher_id" : null,
               ),
             ),
       ),
     );
+  }
+
+  Future<void> _onCheckButtonPressed() async {
+    final studentId = _controller.text.trim();
+    if (studentId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please enter Student ID")));
+      return;
+    }
+
+    final studentRepo = StudentRepository();
+    final exists = await studentRepo.studentExists(studentId);
+
+    if (!exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Student not found"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    await _checkExistingPath(studentId);
   }
 
   @override
@@ -96,116 +127,125 @@ class _LearningPathsPageState extends State<LearningPathsPage> {
       appBar: AppBar(
         backgroundColor: kPrimary,
         foregroundColor: Colors.white,
-        title: const Text("Learning Paths"),
+        title: const Text(
+          "Learning Paths",
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        centerTitle: true,
       ),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Material(
             color: Colors.white,
             borderRadius: BorderRadius.circular(28),
-            elevation: 8,
+            elevation: 10,
             child: Padding(
-              padding: const EdgeInsets.all(28),
+              padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.timeline, size: 70, color: kPrimary),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Enter Student ID",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  Icon(Icons.school_rounded, size: 82, color: kPrimary),
+                  const SizedBox(height: 24),
+                  Text(
+                    widget.isTeacher
+                        ? "Manage Student Learning Path"
+                        : "View Child's Learning Path",
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 32),
 
                   TextField(
-                    controller: controller,
+                    controller: _controller,
                     decoration: InputDecoration(
-                      hintText: "e.g. STU001",
+                      hintText: "Enter Student ID (e.g. STU001)",
                       filled: true,
                       fillColor: const Color(0xFFF8F1E3),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
+                      prefixIcon: const Icon(
+                        Icons.person_search,
+                        color: kPrimary,
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
-                  if (isChecking)
-                    const CircularProgressIndicator()
-                  else if (hasExistingPath == null)
+                  if (_isChecking)
+                    const CircularProgressIndicator(color: kPrimary)
+                  else if (_hasExistingPath == null)
                     SizedBox(
                       width: double.infinity,
+                      height: 56,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                        onPressed: () async {
-                          final studentId = controller.text.trim();
-                          if (studentId.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Please enter Student ID"),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final repo = StudentRepository();
-                          final exists = await repo.studentExists(studentId);
-                          if (!exists) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Student not found"),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-
-                          await checkExistingPath(studentId);
-                        },
-                        child: const Text("Check Learning Path"),
+                        onPressed: _onCheckButtonPressed,
+                        child: const Text(
+                          "Check Learning Path",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     )
                   else ...[
-                    if (hasExistingPath == true) ...[
+                    if (_hasExistingPath == true) ...[
                       SizedBox(
                         width: double.infinity,
+                        height: 56,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                          onPressed: () => _navigateToDetail(currentStudentId!),
+                          onPressed:
+                              () => _navigateToDetail(_currentStudentId!),
                           child: const Text("View Latest Learning Path"),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       SizedBox(
                         width: double.infinity,
+                        height: 56,
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: kPrimary,
-                            side: const BorderSide(color: kPrimary, width: 2),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: const BorderSide(color: kPrimary, width: 2.2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                          onPressed: () => generateNewPath(currentStudentId!),
+                          onPressed: () => _generateNewPath(_currentStudentId!),
                           child: const Text("Generate New Version"),
                         ),
                       ),
                     ] else
                       SizedBox(
                         width: double.infinity,
+                        height: 56,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                          onPressed: () => generateNewPath(currentStudentId!),
+                          onPressed: () => _generateNewPath(_currentStudentId!),
                           child: const Text("Generate Learning Path"),
                         ),
                       ),

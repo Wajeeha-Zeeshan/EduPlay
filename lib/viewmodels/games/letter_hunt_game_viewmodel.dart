@@ -8,11 +8,40 @@ import '../../viewmodels/reward_viewmodel.dart';
 class LetterHuntViewModel extends ChangeNotifier {
   final LetterHuntRepository repo = LetterHuntRepository();
   final RewardViewModel rewardVM = RewardViewModel();
+  final int totalLevels = 30;
 
-  final List<String> letters = List.generate(
-    26,
-    (i) => String.fromCharCode(65 + i),
-  );
+  final List<Map<String, String>> levels = [
+    {"sequence": "K L _", "answer": "M"},
+    {"sequence": "A B _", "answer": "C"},
+    {"sequence": "R S _", "answer": "T"},
+    {"sequence": "D E _", "answer": "F"},
+    {"sequence": "X Y _", "answer": "Z"},
+    {"sequence": "M N _", "answer": "O"},
+    {"sequence": "G H _", "answer": "I"},
+    {"sequence": "P Q _", "answer": "R"},
+    {"sequence": "B C _", "answer": "D"},
+    {"sequence": "T U _", "answer": "V"},
+    {"sequence": "F G _", "answer": "H"},
+    {"sequence": "J K _", "answer": "L"},
+    {"sequence": "L M _", "answer": "N"},
+    {"sequence": "N O _", "answer": "P"},
+    {"sequence": "Q R _", "answer": "S"},
+    {"sequence": "S T _", "answer": "U"},
+    {"sequence": "U V _", "answer": "W"},
+    {"sequence": "V W _", "answer": "X"},
+    {"sequence": "C D _", "answer": "E"},
+    {"sequence": "E F _", "answer": "G"},
+    {"sequence": "H I _", "answer": "J"},
+    {"sequence": "I J _", "answer": "K"},
+    {"sequence": "O P _", "answer": "Q"},
+    {"sequence": "W X _", "answer": "Y"},
+    {"sequence": "Y Z _", "answer": "A"},
+    {"sequence": "Z A _", "answer": "B"},
+    {"sequence": "P Q _", "answer": "R"},
+    {"sequence": "D E _", "answer": "F"},
+    {"sequence": "M N _", "answer": "O"},
+    {"sequence": "T U _", "answer": "V"},
+  ];
 
   int currentLevel = 0;
   int score = 0;
@@ -50,28 +79,26 @@ class LetterHuntViewModel extends ChangeNotifier {
   }
 
   void loadLevel() {
-    if (currentLevel >= 26) return;
+    if (currentLevel >= levels.length) return;
 
     feedbackMessage = null;
 
-    final startIndex = Random().nextInt(24);
-
-    final first = letters[startIndex];
-    final second = letters[startIndex + 1];
-    correctAnswer = letters[startIndex + 2];
-
-    currentSequence = "$first $second _";
+    currentSequence = levels[currentLevel]["sequence"]!;
+    correctAnswer = levels[currentLevel]["answer"]!;
 
     options = _generateOptions(correctAnswer);
   }
 
   List<String> _generateOptions(String correct) {
-    List<String> all = List.from(letters);
+    List<String> allLetters = List.generate(
+      26,
+      (i) => String.fromCharCode(65 + i),
+    );
 
-    all.remove(correct);
-    all.shuffle();
+    allLetters.remove(correct);
+    allLetters.shuffle();
 
-    List<String> wrong = all.take(2).toList();
+    List<String> wrong = allLetters.take(2).toList();
 
     List<String> result = [...wrong, correct];
     result.shuffle();
@@ -91,7 +118,7 @@ class LetterHuntViewModel extends ChangeNotifier {
 
       await save();
 
-      if (currentLevel < 26) {
+      if (currentLevel < levels.length) {
         loadLevel();
       } else {
         await giveFinalReward();
@@ -119,8 +146,8 @@ class LetterHuntViewModel extends ChangeNotifier {
         gameId: "Letter Hunt",
         currentLevel: currentLevel,
         score: score,
-        totalLevels: 26,
-        accuracy: ((score / 260) * 100).clamp(0, 100),
+        totalLevels: totalLevels,
+        accuracy: ((score / (totalLevels * 10)) * 100).clamp(0, 100),
         totalRetries: getTotalRetries(),
         completedLevels: List.generate(currentLevel, (i) => "Level ${i + 1}"),
         retries: retries,
@@ -134,7 +161,7 @@ class LetterHuntViewModel extends ChangeNotifier {
 
     try {
       int totalRetries = getTotalRetries();
-      double accuracy = (score / 260) * 100;
+      double accuracy = (score / (totalLevels * 10)) * 100;
 
       String rewardType;
 
@@ -198,7 +225,7 @@ class LetterHuntViewModel extends ChangeNotifier {
     return "Keep Practicing!";
   }
 
-  bool isCompleted() => currentLevel >= 26;
+  bool isCompleted() => currentLevel >= totalLevels;
 
   int getTotalRetries() => retries.values.fold(0, (a, b) => a + b);
 }

@@ -24,57 +24,156 @@ class WordMatchViewModel extends ChangeNotifier {
 
   final List<Map<String, dynamic>> levels = [
     {
-      "word": "Apple",
-      "correct": "assets/images/apple.png",
+      "word": "Tree",
+      "correct": "assets/images/tree.png",
       "options": [
-        "assets/images/apple.png",
-        "assets/images/ball.png",
-        "assets/images/cat.png",
+        "assets/images/book.png",
+        "assets/images/tree.png",
+        "assets/images/cake.png",
       ],
     },
     {
       "word": "Ball",
       "correct": "assets/images/ball.png",
       "options": [
-        "assets/images/apple.png",
-        "assets/images/ball.png",
         "assets/images/dog.png",
+        "assets/images/ball.png",
+        "assets/images/pizza.png",
       ],
     },
     {
-      "word": "Cat",
-      "correct": "assets/images/cat.png",
+      "word": "Rabbit",
+      "correct": "assets/images/rabbit.png",
       "options": [
-        "assets/images/cat.png",
-        "assets/images/fish.png",
+        "assets/images/rabbit.png",
         "assets/images/car.png",
+        "assets/images/fish.png",
+      ],
+    },
+    {
+      "word": "Apple",
+      "correct": "assets/images/apple.png",
+      "options": [
+        "assets/images/moon.png",
+        "assets/images/apple.png",
+        "assets/images/hat.png",
+      ],
+    },
+    {
+      "word": "Clock",
+      "correct": "assets/images/clock.png",
+      "options": [
+        "assets/images/star.png",
+        "assets/images/clock.png",
+        "assets/images/banana.png",
       ],
     },
     {
       "word": "Dog",
       "correct": "assets/images/dog.png",
       "options": [
+        "assets/images/pencil.png",
+        "assets/images/sun.png",
         "assets/images/dog.png",
+      ],
+    },
+    {
+      "word": "Pizza",
+      "correct": "assets/images/pizza.png",
+      "options": [
+        "assets/images/cake.png",
+        "assets/images/pizza.png",
+        "assets/images/boat.png",
+      ],
+    },
+    {
+      "word": "Cat",
+      "correct": "assets/images/cat.png",
+      "options": [
+        "assets/images/book.png",
+        "assets/images/cat.png",
+        "assets/images/tree.png",
+      ],
+    },
+    {
+      "word": "Bird",
+      "correct": "assets/images/bird.png",
+      "options": [
+        "assets/images/bird.png",
+        "assets/images/apple.png",
+        "assets/images/clock.png",
+      ],
+    },
+    {
+      "word": "Sun",
+      "correct": "assets/images/sun.png",
+      "options": [
+        "assets/images/moon.png",
+        "assets/images/rabbit.png",
+        "assets/images/sun.png",
+      ],
+    },
+    {
+      "word": "Boat",
+      "correct": "assets/images/boat.png",
+      "options": [
+        "assets/images/fish.png",
+        "assets/images/boat.png",
         "assets/images/banana.png",
-        "assets/images/car.png",
       ],
     },
     {
       "word": "Fish",
       "correct": "assets/images/fish.png",
       "options": [
+        "assets/images/pizza.png",
         "assets/images/fish.png",
+        "assets/images/hat.png",
+      ],
+    },
+    {
+      "word": "Book",
+      "correct": "assets/images/book.png",
+      "options": [
+        "assets/images/book.png",
+        "assets/images/star.png",
+        "assets/images/car.png",
+      ],
+    },
+    {
+      "word": "Moon",
+      "correct": "assets/images/moon.png",
+      "options": [
+        "assets/images/moon.png",
+        "assets/images/tree.png",
+        "assets/images/dog.png",
+      ],
+    },
+    {
+      "word": "Cake",
+      "correct": "assets/images/cake.png",
+      "options": [
+        "assets/images/cake.png",
         "assets/images/apple.png",
-        "assets/images/ball.png",
+        "assets/images/pencil.png",
       ],
     },
     {
       "word": "Car",
       "correct": "assets/images/car.png",
       "options": [
+        "assets/images/clock.png",
         "assets/images/car.png",
-        "assets/images/dog.png",
-        "assets/images/cat.png",
+        "assets/images/bird.png",
+      ],
+    },
+    {
+      "word": "Hat",
+      "correct": "assets/images/hat.png",
+      "options": [
+        "assets/images/banana.png",
+        "assets/images/hat.png",
+        "assets/images/ball.png",
       ],
     },
     {
@@ -82,35 +181,26 @@ class WordMatchViewModel extends ChangeNotifier {
       "correct": "assets/images/banana.png",
       "options": [
         "assets/images/banana.png",
-        "assets/images/fish.png",
-        "assets/images/apple.png",
+        "assets/images/rabbit.png",
+        "assets/images/book.png",
       ],
     },
     {
-      "word": "Sun",
-      "correct": "assets/images/sun.png",
-      "options": [
-        "assets/images/sun.png",
-        "assets/images/moon.png",
-        "assets/images/star.png",
-      ],
-    },
-    {
-      "word": "Moon",
-      "correct": "assets/images/moon.png",
+      "word": "Pencil",
+      "correct": "assets/images/pencil.png",
       "options": [
         "assets/images/star.png",
-        "assets/images/moon.png",
-        "assets/images/sun.png",
+        "assets/images/pencil.png",
+        "assets/images/cat.png",
       ],
     },
     {
       "word": "Star",
       "correct": "assets/images/star.png",
       "options": [
-        "assets/images/moon.png",
-        "assets/images/sun.png",
+        "assets/images/boat.png",
         "assets/images/star.png",
+        "assets/images/sun.png",
       ],
     },
   ];
@@ -174,7 +264,7 @@ class WordMatchViewModel extends ChangeNotifier {
         gameId: "Word Match",
         currentLevel: currentLevel,
         score: score,
-        totalLevels: 10,
+        totalLevels: 20,
         accuracy: ((score / 100) * 100).clamp(0, 100),
         totalRetries: getTotalRetries(),
         completedLevels: List.generate(currentLevel, (i) => "Level ${i + 1}"),
