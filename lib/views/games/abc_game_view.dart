@@ -2,16 +2,53 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/games/abc_game_viewmodel.dart';
 import '../../views/reward_view.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class ABCGamePage extends StatelessWidget {
+class ABCGamePage extends StatefulWidget {
   final String studentId;
 
   const ABCGamePage({super.key, required this.studentId});
+  @override
+  State<ABCGamePage> createState() => _ABCGamePageState();
+}
+
+class _ABCGamePageState extends State<ABCGamePage> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _playMusic();
+  }
+
+  Future<void> _playMusic() async {
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.setVolume(1.0);
+
+      _audioPlayer.onPlayerStateChanged.listen((state) {
+        print("Player state: $state");
+      });
+
+      await _audioPlayer.play(AssetSource('audio/abc_music.mp3'));
+
+      print("Music started");
+    } catch (e) {
+      print("Audio error: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ABCGameViewModel()..init(studentId),
+      create: (_) => ABCGameViewModel()..init(widget.studentId),
       child: Scaffold(
         body: Consumer<ABCGameViewModel>(
           builder: (context, vm, _) {
@@ -82,14 +119,16 @@ class ABCGamePage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 8),
+      padding: const EdgeInsets.only(top: 40, bottom: 8),
       child: Text(
-        "ABC Fun Game",
-        style: TextStyle(
-          fontSize: 38,
-          fontWeight: FontWeight.w900,
-          color: const Color.fromARGB(255, 132, 23, 171),
-          letterSpacing: 1.5,
+        "ABC Game",
+        style: GoogleFonts.fredoka(
+          fontSize: 44,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          shadows: [
+            Shadow(color: Colors.purple, blurRadius: 8, offset: Offset(3, 3)),
+          ],
         ),
       ),
     );

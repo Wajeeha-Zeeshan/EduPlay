@@ -1,18 +1,51 @@
-// lib/views/games/letter_hunt_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/games/letter_hunt_game_viewmodel.dart';
 import '../reward_view.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class LetterHuntPage extends StatelessWidget {
+class LetterHuntPage extends StatefulWidget {
   final String studentId;
 
   const LetterHuntPage({super.key, required this.studentId});
 
   @override
+  State<LetterHuntPage> createState() => _LetterHuntPageState();
+}
+
+class _LetterHuntPageState extends State<LetterHuntPage> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _playMusic();
+  }
+
+  Future<void> _playMusic() async {
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.setVolume(1.0);
+
+      await _audioPlayer.play(AssetSource('audio/letter_hunt_music.mp3'));
+
+      print('Letter Hunt music started');
+    } catch (e) {
+      print('Letter Hunt audio error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => LetterHuntViewModel()..init(studentId),
+      create: (_) => LetterHuntViewModel()..init(widget.studentId),
       child: Scaffold(
         body: Consumer<LetterHuntViewModel>(
           builder: (context, vm, _) {
@@ -20,7 +53,7 @@ class LetterHuntPage extends StatelessWidget {
               return Container(
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/letterhunt.jpg'),
+                    image: AssetImage('assets/images/letterhunt.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -40,7 +73,7 @@ class LetterHuntPage extends StatelessWidget {
             return Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/letterhunt.jpg'),
+                  image: AssetImage('assets/images/letterhunt.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -83,14 +116,17 @@ class LetterHuntPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 8),
+      padding: const EdgeInsets.only(top: 40, bottom: 8),
       child: Text(
         "Letter Hunt",
-        style: TextStyle(
-          fontSize: 36,
-          fontWeight: FontWeight.w900,
+        style: GoogleFonts.fredoka(
+          fontSize: 42,
+          fontWeight: FontWeight.w700,
           color: Colors.white,
-          letterSpacing: 1.8,
+          letterSpacing: 1.5,
+          shadows: [
+            Shadow(color: Colors.black26, blurRadius: 6, offset: Offset(2, 2)),
+          ],
         ),
       ),
     );
@@ -99,7 +135,7 @@ class LetterHuntPage extends StatelessWidget {
   Widget _buildSubtitle() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.88),
         borderRadius: BorderRadius.circular(40),
@@ -110,7 +146,7 @@ class LetterHuntPage extends StatelessWidget {
       child: const Text(
         "What comes next in the sequence?",
         style: TextStyle(
-          fontSize: 18,
+          fontSize: 22,
           fontWeight: FontWeight.w700,
           color: Color(0xFF5C2A0E),
         ),
@@ -343,7 +379,7 @@ class LetterHuntPage extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/letterhunt.jpg'),
+          image: AssetImage('assets/images/letterhunt.png'),
           fit: BoxFit.cover,
         ),
       ),

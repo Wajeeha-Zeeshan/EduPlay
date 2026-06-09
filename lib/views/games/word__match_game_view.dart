@@ -2,16 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/games/word_match_game_viewmodel.dart';
 import '../reward_view.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class WordMatchPage extends StatelessWidget {
+class WordMatchPage extends StatefulWidget {
   final String studentId;
 
   const WordMatchPage({super.key, required this.studentId});
 
   @override
+  State<WordMatchPage> createState() => _WordMatchPageState();
+}
+
+class _WordMatchPageState extends State<WordMatchPage> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _playMusic();
+  }
+
+  Future<void> _playMusic() async {
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.setVolume(1.0);
+
+      await _audioPlayer.play(AssetSource('audio/word_match_music.mp3'));
+
+      print('Word Match music started');
+    } catch (e) {
+      print('Word Match audio error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => WordMatchViewModel()..init(studentId),
+      create: (_) => WordMatchViewModel()..init(widget.studentId),
       child: Scaffold(
         body: Consumer<WordMatchViewModel>(
           builder: (context, vm, _) {
@@ -19,7 +53,7 @@ class WordMatchPage extends StatelessWidget {
               return Container(
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/wordmatch.jpg'),
+                    image: AssetImage('assets/images/wordmatch.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -39,7 +73,7 @@ class WordMatchPage extends StatelessWidget {
             return Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/wordmatch.jpg'),
+                  image: AssetImage('assets/images/wordmatch.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -91,14 +125,21 @@ class WordMatchPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      padding: const EdgeInsets.only(top: 60, bottom: 4),
       child: Text(
         "Word Match",
-        style: TextStyle(
-          fontSize: 34,
-          fontWeight: FontWeight.w900,
-          color: Color(0xFF6A1B9A),
-          letterSpacing: 1.6,
+        style: GoogleFonts.fredoka(
+          fontSize: 48,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF8E44AD),
+          letterSpacing: 1.2,
+          shadows: const [
+            Shadow(
+              color: Color(0xFFFFD54F),
+              offset: Offset(3, 3),
+              blurRadius: 0,
+            ),
+          ],
         ),
       ),
     );
@@ -107,7 +148,7 @@ class WordMatchPage extends StatelessWidget {
   Widget _buildSubtitle() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 30),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.88),
         borderRadius: BorderRadius.circular(40),
@@ -342,7 +383,7 @@ class WordMatchPage extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/wordmatch.jpg'),
+          image: AssetImage('assets/images/wordmatch.png'),
           fit: BoxFit.cover,
         ),
       ),
