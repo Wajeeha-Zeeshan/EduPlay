@@ -125,9 +125,13 @@ class _ABCGamePageState extends State<ABCGamePage> {
         style: GoogleFonts.fredoka(
           fontSize: 44,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: const Color(0xFF6A1B9A),
           shadows: [
-            Shadow(color: Colors.purple, blurRadius: 8, offset: Offset(3, 3)),
+            Shadow(
+              color: Color(0xFFD7A6FF),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
       ),
@@ -392,28 +396,32 @@ class _ABCGamePageState extends State<ABCGamePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 100),
-
-                Text(
-                  "You're Amazing 🌟",
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(3, 3),
-                        blurRadius: 10,
-                        color: Colors.black.withOpacity(0.6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      "You're Amazing ",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: Color.fromARGB(255, 116, 8, 152),
                       ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
+                    ),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 36,
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 6),
                 const Text(
                   "You completed the ABC Game!",
-                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color.fromARGB(255, 116, 8, 152),
+                  ),
                 ),
 
                 const SizedBox(height: 50),
@@ -525,11 +533,16 @@ class _ABCGamePageState extends State<ABCGamePage> {
                       children: [
                         SizedBox(width: 10),
                         Text(
-                          "See Your Rewards 🎁",
+                          "See Your Rewards ",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
+                        ),
+                        Icon(
+                          Icons.card_giftcard,
+                          color: Colors.white,
+                          size: 24,
                         ),
                       ],
                     ),
@@ -568,20 +581,8 @@ class _ABCGamePageState extends State<ABCGamePage> {
                 ),
 
                 const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () => vm.init(vm.studentId!),
-                  icon: const Icon(
-                    Icons.play_arrow,
-                    size: 22,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    "Play Again",
-                    style: TextStyle(fontSize: 17, color: Colors.white),
-                  ),
-                ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 60),
               ],
             ),
           ),

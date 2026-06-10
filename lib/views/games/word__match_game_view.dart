@@ -405,29 +405,49 @@ class _WordMatchPageState extends State<WordMatchPage> {
                 children: [
                   const SizedBox(height: 10),
 
-                  const SizedBox(height: 18),
-                  Text(
-                    "You're Amazing 🌟",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(2, 2),
-                          blurRadius: 10,
-                          color: Colors.black.withOpacity(0.7),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "You're Amazing",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFFFF8E7),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black54,
+                              blurRadius: 12,
+                              offset: Offset(2, 3),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Colors.amber,
+                        size: 36,
+                      ),
+                    ],
                   ),
+
                   const SizedBox(height: 6),
                   const Text(
                     "You completed Word Match!",
-                    style: TextStyle(fontSize: 20, color: Colors.white70),
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: const Color(0xFFFFF8E7),
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 12,
+                          offset: Offset(2, 3),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 60),
 
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -506,7 +526,7 @@ class _WordMatchPageState extends State<WordMatchPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 40),
 
                   if (hasRewards)
                     ElevatedButton(
@@ -535,22 +555,21 @@ class _WordMatchPageState extends State<WordMatchPage> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.card_giftcard, size: 24),
                           SizedBox(width: 10),
                           Text(
-                            "See Your Rewards 🎁",
+                            "See Your Rewards ",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
+                          Icon(Icons.card_giftcard, size: 24),
                         ],
                       ),
                     ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 60),
 
-                  // Go Home Button
                   ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
@@ -581,23 +600,6 @@ class _WordMatchPageState extends State<WordMatchPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: () => vm.init(vm.studentId!),
-                    icon: const Icon(
-                      Icons.play_arrow,
-                      size: 22,
-                      color: Colors.white,
-                    ),
-                    label: const Text(
-                      "Play Again",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 20),
                 ],
               ),

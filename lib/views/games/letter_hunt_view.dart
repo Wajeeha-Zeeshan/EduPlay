@@ -398,27 +398,47 @@ class _LetterHuntPageState extends State<LetterHuntPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 80),
-                Text(
-                  "You're Amazing 🌟",
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(2, 2),
-                        blurRadius: 8,
-                        color: Colors.black.withOpacity(0.6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    SizedBox(width: 8),
+                    Text(
+                      "You're Amazing",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFFFF8E7),
+                        shadows: [
+                          Shadow(
+                            color: Colors.black54,
+                            blurRadius: 12,
+                            offset: Offset(2, 3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
+                    ),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 36,
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 6),
                 const Text(
                   "You completed Letter Hunt!",
-                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: const Color(0xFFFFF8E7),
+                    shadows: [
+                      Shadow(
+                        color: Colors.black54,
+                        blurRadius: 12,
+                        offset: Offset(2, 3),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 60),
@@ -528,15 +548,15 @@ class _LetterHuntPageState extends State<LetterHuntPage> {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.card_giftcard, size: 24),
                         SizedBox(width: 10),
                         Text(
-                          "See Your Rewards 🎁",
+                          "See Your Rewards ",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        Icon(Icons.card_giftcard, size: 24),
                       ],
                     ),
                   ),
@@ -573,21 +593,9 @@ class _LetterHuntPageState extends State<LetterHuntPage> {
                   ),
                 ),
 
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () => vm.init(vm.studentId!),
-                  icon: const Icon(
-                    Icons.play_arrow,
-                    size: 22,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    "Play Again",
-                    style: TextStyle(fontSize: 17, color: Colors.white),
-                  ),
-                ),
+                const SizedBox(height: 40),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 60),
               ],
             ),
           ),

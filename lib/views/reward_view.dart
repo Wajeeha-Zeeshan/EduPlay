@@ -16,51 +16,45 @@ class RewardView extends StatelessWidget {
         body: Consumer<RewardViewModel>(
           builder: (context, vm, _) {
             return Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF6D5FFD), Color(0xFF8A7CFF)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+              decoration: BoxDecoration(
+                image: const DecorationImage(
+                  image: AssetImage("assets/images/rewards.png"),
+                  fit: BoxFit.cover,
                 ),
+                color: Colors.black.withOpacity(0.1),
               ),
               child: Scaffold(
                 backgroundColor: Colors.transparent,
-                appBar: AppBar(
-                  elevation: 0,
-                  centerTitle: true,
-                  backgroundColor: Colors.transparent,
-                  title: const Text(
-                    "Rewards 🏆",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(2, 2),
-                          blurRadius: 8,
-                          color: Colors.black26,
-                        ),
-                      ],
-                    ),
-                  ),
-                  leading: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
+
                 body: SafeArea(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
+                        const SizedBox(height: 140),
+                        Text(
+                          "Rewards",
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w900,
+                            fontStyle: FontStyle.italic,
+                            color: Color(0xFFB78DFF),
+                            shadows: [
+                              Shadow(
+                                color: Colors.white,
+                                blurRadius: 8,
+                                offset: Offset(0, 0),
+                              ),
+                              Shadow(
+                                color: Colors.black26,
+                                blurRadius: 6,
+                                offset: Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+
                         const SizedBox(height: 12),
-                        if (vm.rewards.isNotEmpty) _statsSummary(vm),
-                        const SizedBox(height: 20),
 
                         vm.rewards.isEmpty
                             ? _empty()
@@ -79,7 +73,7 @@ class RewardView extends StatelessWidget {
                               ),
                             ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 15),
                       ],
                     ),
                   ),
@@ -92,58 +86,6 @@ class RewardView extends StatelessWidget {
     );
   }
 
-  Widget _statsSummary(RewardViewModel vm) {
-    final totalXP = vm.rewards.fold<int>(0, (sum, r) => sum + r.value);
-    final epicCount = vm.rewards.where((r) => r.rarity == "epic").length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.white.withOpacity(0.25),
-              Colors.white.withOpacity(0.12),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _statChip("${vm.rewards.length}", "REWARDS", Icons.card_giftcard),
-            _statChip("$totalXP", "TOTAL XP", Icons.star),
-            _statChip("$epicCount", "EPIC", Icons.emoji_events),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statChip(String value, String label, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white, size: 22),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.75)),
-        ),
-      ],
-    );
-  }
-
-  // ==================== REWARD CARD ====================
   Widget _rewardCard(Reward r) {
     final color = _color(r.rarity);
 
@@ -233,25 +175,37 @@ class RewardView extends StatelessWidget {
   }
 
   Widget _empty() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 100),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 120),
       child: Center(
         child: Column(
           children: [
-            Text("🎁", style: TextStyle(fontSize: 90)),
+            Icon(
+              Icons.workspace_premium_rounded,
+              size: 90,
+              color: Color(0xFFAF8CFF),
+            ),
+
             SizedBox(height: 20),
+
             Text(
               "No rewards yet",
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFFAF8CFF),
               ),
             ),
-            SizedBox(height: 10),
+
+            SizedBox(height: 12),
+
             Text(
               "Complete challenges to earn rewards!",
-              style: TextStyle(fontSize: 16, color: Colors.white70),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFAF8CFF),
+              ),
               textAlign: TextAlign.center,
             ),
           ],
