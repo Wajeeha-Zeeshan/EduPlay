@@ -6,10 +6,9 @@ import '../models/progress_report_model.dart';
 class ProgressReportRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Generate AI progress report
   Future<String> generateProgressReport(String studentId) async {
     try {
-      print("📊 PROGRESS REPORT GENERATION STARTED: $studentId");
+      print("PROGRESS REPORT GENERATION STARTED: $studentId");
 
       final performance = await _fetchStudentPerformance(studentId);
 
@@ -85,10 +84,10 @@ Conclusion:
         'modelUsed': 'gemini-2.5-flash',
       });
 
-      print("✅ REPORT SAVED: ${docRef.id}");
+      print("REPORT SAVED: ${docRef.id}");
       return generatedText;
     } catch (e, stack) {
-      print("❌ REPORT GENERATION ERROR: $e");
+      print("REPORT GENERATION ERROR: $e");
       print(stack);
       rethrow;
     }
@@ -116,7 +115,7 @@ Conclusion:
             return text;
           }
         } catch (e) {
-          print("⚠️ MODEL FAILED: $e");
+          print("MODEL FAILED: $e");
           if (e.toString().contains("503") ||
               e.toString().contains("UNAVAILABLE") ||
               e.toString().contains("high demand")) {
@@ -202,7 +201,7 @@ Weakest Game: $weakestGame
 $gameDetails
 """;
     } catch (e) {
-      print("❌ FETCH ERROR: $e");
+      print("FETCH ERROR: $e");
       return "Error fetching performance.";
     }
   }

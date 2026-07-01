@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../models/user_model.dart';
 import '../models/parent_model.dart';
 import '../models/teacher_model.dart';
@@ -172,7 +171,7 @@ class UserRepository {
       return AppUser.fromMap(userData);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        throw Exception('Invalid email.');
+        throw Exception('User not found.');
       } else if (e.code == 'wrong-password') {
         throw Exception('Incorrect password.');
       } else if (e.code == 'invalid-email') {

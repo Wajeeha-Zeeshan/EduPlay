@@ -29,7 +29,6 @@ class AIRepository {
       final response = await model.generateContent([Content.text(prompt)]);
       final generatedText = response.text?.trim() ?? "No response generated.";
 
-      // Save with approval status (default false)
       final docRef = await _db.collection('learningPaths').add({
         'studentId': studentId,
         'generatedPath': generatedText,
@@ -86,8 +85,6 @@ class AIRepository {
       return "Error fetching performance data.";
     }
   }
-
-  // NEW: Get latest learning path with full details
 
   Future<LearningPathModel?> getLatestLearningPath(String studentId) async {
     try {
