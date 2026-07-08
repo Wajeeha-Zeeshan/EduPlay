@@ -21,13 +21,11 @@ class UserRepository {
             await _firestore.collection('teachers').doc(userId).get();
         return Teacher.fromMap({...userData, ...?teacherDoc.data()});
       }
-
       if (role == 'parent') {
         final parentDoc =
             await _firestore.collection('parents').doc(userId).get();
         return Parent.fromMap({...userData, ...?parentDoc.data()});
       }
-
       return AppUser.fromMap(userData);
     } catch (e) {
       throw Exception('Failed to fetch user: $e');
@@ -45,6 +43,7 @@ class UserRepository {
             .collection('teachers')
             .where('staffID', isEqualTo: staffID)
             .get();
+
     if (staffCheck.docs.isNotEmpty) {
       throw Exception('Staff ID already in use.');
     }
@@ -132,7 +131,6 @@ class UserRepository {
       });
 
       print("Parent registered successfully with student: $studentName");
-
       return parent;
     } catch (e) {
       throw Exception('Parent registration failed: $e');
@@ -150,8 +148,8 @@ class UserRepository {
       );
 
       final uid = credential.user!.uid;
-
       final userDoc = await _firestore.collection('users').doc(uid).get();
+
       if (!userDoc.exists) throw Exception('User data not found.');
 
       final userData = userDoc.data()!;
@@ -162,7 +160,6 @@ class UserRepository {
             await _firestore.collection('teachers').doc(uid).get();
         return Teacher.fromMap({...userData, ...?teacherDoc.data()});
       }
-
       if (role == 'parent') {
         final parentDoc = await _firestore.collection('parents').doc(uid).get();
         return Parent.fromMap({...userData, ...?parentDoc.data()});
@@ -177,10 +174,27 @@ class UserRepository {
       } else if (e.code == 'invalid-email') {
         throw Exception('Invalid email.');
       } else {
-        throw Exception('Login failed.');
+        throw Exception('Login failed: ${e.message}');
       }
     } catch (e) {
       throw Exception('Login failed.');
+    }
+  }
+
+  /// **New: Forgot Password**
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
+        throw Exception('Invalid email address.');
+      } else if (e.code == 'user-not-found') {
+        throw Exception('No account found with this email.');
+      } else {
+        throw Exception('Failed to send reset email: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Failed to send password reset email.');
     }
   }
 

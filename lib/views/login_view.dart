@@ -21,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
   String? _emailError;
   String? _passwordError;
 
@@ -97,31 +98,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _secondaryButton({
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return Expanded(
-      child: SizedBox(
-        height: 58,
-        child: OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: kPrimary,
-            side: const BorderSide(color: kPrimary, width: 2.4),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-            ),
-          ),
-          onPressed: onPressed,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _handleLogin(LoginViewModel vm) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -131,7 +107,6 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     vm.reset();
-
     await vm.login(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
@@ -139,7 +114,6 @@ class _LoginPageState extends State<LoginPage> {
 
     if (vm.state == LoginState.success) {
       final user = vm.loggedInUser;
-
       if (user?.role == 'teacher') {
         Navigator.pushReplacementNamed(context, '/teacher-dashboard');
       } else if (user?.role == 'parent') {
@@ -149,19 +123,127 @@ class _LoginPageState extends State<LoginPage> {
       }
     } else if (vm.state == LoginState.error && vm.errorMessage.isNotEmpty) {
       if (vm.errorType == LoginErrorType.email) {
-        setState(() {
-          _emailError = vm.errorMessage;
-          _passwordError = null;
-        });
+        setState(() => _emailError = vm.errorMessage);
       } else if (vm.errorType == LoginErrorType.password) {
-        setState(() {
-          _passwordError = vm.errorMessage;
-          _emailError = null;
-        });
-      } else if (vm.errorType == LoginErrorType.general) {
+        setState(() => _passwordError = vm.errorMessage);
+      } else {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(vm.errorMessage)));
+      }
+    }
+  }
+
+  // ==================== THEMED FORGOT PASSWORD DIALOG ====================
+  void _handleForgotPassword(LoginViewModel vm) async {
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your email first")),
+      );
+      return;
+    }
+
+    final shouldSend = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: kWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with primary color
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 22),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    "Reset Password",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: kWhite,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                const Text(
+                  "A password reset link will be sent to your registered email address.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, height: 1.5, color: kText),
+                ),
+
+                const SizedBox(height: 32),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kPrimary,
+                            side: const BorderSide(color: kPrimary, width: 2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            foregroundColor: kWhite,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            "Send Link",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+    );
+
+    if (shouldSend == true) {
+      await vm.forgotPassword(_emailController.text.trim());
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(vm.errorMessage),
+            backgroundColor:
+                vm.errorType == LoginErrorType.none ? Colors.green : Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -213,6 +295,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 50),
+
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -224,12 +307,10 @@ class _LoginPageState extends State<LoginPage> {
                                 (v == null || v.trim().isEmpty)
                                     ? "Email is required"
                                     : null,
-                        onChanged: (_) {
-                          if (_emailError != null)
-                            setState(() => _emailError = null);
-                        },
                       ),
+
                       const SizedBox(height: 16),
+
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -248,12 +329,25 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                           ),
                         ),
-                        onChanged: (_) {
-                          if (_passwordError != null)
-                            setState(() => _passwordError = null);
-                        },
                       ),
+
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => _handleForgotPassword(vm),
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                              color: kPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 30),
+
                       Row(
                         children: [
                           _primaryButton(
@@ -262,7 +356,7 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () => _handleLogin(vm),
                           ),
                           const SizedBox(width: 16),
-                          _secondaryButton(
+                          _primaryButton(
                             label: "Cancel",
                             onPressed:
                                 () => Navigator.pushReplacementNamed(
@@ -272,6 +366,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 24),
                       Center(
                         child: TextButton(

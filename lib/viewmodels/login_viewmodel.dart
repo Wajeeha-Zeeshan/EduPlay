@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart' as models;
+import 'package:provider/provider.dart';
 import '../repositories/user_repository.dart';
+import '../models/user_model.dart' as models;
 
 enum LoginState { idle, loading, success, error }
 
@@ -30,14 +31,11 @@ class LoginViewModel extends ChangeNotifier {
 
   Future<void> login({required String email, required String password}) async {
     if (email.isEmpty || password.isEmpty) {
-      _setError(
-        "Please fill in all the required fields.",
-        type: LoginErrorType.general,
-      );
+      _setError("Please fill in all fields.", type: LoginErrorType.general);
       return;
     }
     if (!_isValidEmail(email)) {
-      _setError("Invalid email.", type: LoginErrorType.email);
+      _setError("Invalid email format.", type: LoginErrorType.email);
       return;
     }
 
@@ -52,13 +50,43 @@ class LoginViewModel extends ChangeNotifier {
       _setState(LoginState.success);
     } on Exception catch (e) {
       final msg = e.toString().replaceFirst('Exception: ', '');
-      if (msg.contains('email') || msg.contains('Email')) {
+      if (msg.toLowerCase().contains('email')) {
         _setError(msg, type: LoginErrorType.email);
-      } else if (msg.contains('password') || msg.contains('Password')) {
+      } else if (msg.toLowerCase().contains('password')) {
         _setError(msg, type: LoginErrorType.password);
       } else {
-        _setError("Please try again.", type: LoginErrorType.general);
+        _setError(
+          msg.isEmpty ? "Login failed. Please try again." : msg,
+          type: LoginErrorType.general,
+        );
       }
+    }
+  }
+
+  /// **New: Forgot Password**
+  Future<void> forgotPassword(String email) async {
+    if (email.isEmpty) {
+      _setError("Please enter your email.", type: LoginErrorType.email);
+      return;
+    }
+    if (!_isValidEmail(email)) {
+      _setError("Invalid email format.", type: LoginErrorType.email);
+      return;
+    }
+
+    _setState(LoginState.loading);
+
+    try {
+      await _userRepository.sendPasswordResetEmail(email);
+      _errorMessage = "Password reset link sent to your email.";
+      _errorType = LoginErrorType.none; // success message
+      _state = LoginState.idle;
+    } on Exception catch (e) {
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _setError(msg, type: LoginErrorType.email);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
