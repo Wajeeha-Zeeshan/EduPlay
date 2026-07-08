@@ -207,10 +207,10 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
                         children: [
                           Expanded(
                             child: _secondaryButton(
-                              vm.isApproved ? "Approved ✓" : "Approve",
+                              vm.isApproved ? "Approved" : "Approve",
                               vm.isApproved
                                   ? null
-                                  : () => _approveReport(context, vm),
+                                  : () => _showApproveDialog(context, vm),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -235,6 +235,100 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
     );
   }
 
+  void _showApproveDialog(BuildContext context, ProgressReportViewModel vm) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: kWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    "Approve Progress Report?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: kWhite,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                const Text(
+                  "This will make the progress report visible to the parent.\n\nAre you sure?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, height: 1.5),
+                ),
+
+                const SizedBox(height: 30),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kPrimary,
+                            side: const BorderSide(color: kPrimary, width: 2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            foregroundColor: kWhite,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _approveReport(context, vm);
+                          },
+                          child: const Text(
+                            "Approve",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+    );
+  }
   // ==================== HELPER METHODS ====================
 
   Widget _buildStatTile(IconData icon, String title, String value) {
@@ -355,21 +449,33 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
     return widgets;
   }
 
-  Widget _secondaryButton(String label, VoidCallback? onPressed) {
+  Widget _secondaryButton(
+    String label,
+    VoidCallback? onPressed, {
+    Color? color,
+  }) {
+    final buttonColor = color ?? kPrimary;
+
     return SizedBox(
-      height: 58,
+      height: 56,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: kPrimary,
-          side: const BorderSide(color: kPrimary, width: 2.4),
+          foregroundColor: buttonColor,
+          side: BorderSide(color: buttonColor, width: 2.2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
         onPressed: onPressed,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
         ),
       ),
     );
@@ -377,19 +483,25 @@ class _ProgressReportDetailViewState extends State<ProgressReportDetailView> {
 
   Widget _dangerButton(String label, VoidCallback onPressed) {
     return SizedBox(
-      height: 58,
+      height: 56,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.redAccent,
           side: const BorderSide(color: Colors.redAccent, width: 2.2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
         onPressed: onPressed,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
         ),
       ),
     );

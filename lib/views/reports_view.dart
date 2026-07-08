@@ -116,7 +116,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
       appBar: AppBar(
         backgroundColor: kPrimary,
         foregroundColor: Colors.white,
-        title: const Text("AI Progress Reports"),
+        title: const Text("Progress Reports"),
       ),
 
       body: Center(

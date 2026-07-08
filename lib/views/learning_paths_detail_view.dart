@@ -100,7 +100,7 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
                   viewModel.learningPath.isEmpty
               ? const Center(
                 child: Text(
-                  "No learning path found yet.\nPlease generate one from teacher panel.",
+                  "No learning path found yet.\nPlease generate one.",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16.5, color: kHint),
                 ),
@@ -140,9 +140,7 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
                           Expanded(
                             child: _secondaryButton(
                               label:
-                                  viewModel.isApproved
-                                      ? "Approved ✓"
-                                      : "Approve",
+                                  viewModel.isApproved ? "Approved" : "Approve",
                               color:
                                   viewModel.isApproved
                                       ? Colors.green
@@ -150,7 +148,10 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
                               onPressed:
                                   viewModel.isApproved
                                       ? null
-                                      : () => _approvePath(context, viewModel),
+                                      : () => _showApproveDialog(
+                                        context,
+                                        viewModel,
+                                      ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -177,7 +178,99 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
     );
   }
 
-  // NEW: Approve Path Method
+  // ==================== Approve Confirmation Dialog ====================
+  void _showApproveDialog(
+    BuildContext context,
+    LearningPathViewModel viewModel,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: kWhite,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    color: kPrimary, // Same as AppBar
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    "Approve Learning Path?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: kWhite,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  "This will make the learning path visible to the parent.\n\nAre you sure?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, height: 1.5),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: kPrimary,
+                            side: const BorderSide(color: kPrimary, width: 2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary, // Using appbar color
+                            foregroundColor: kWhite,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _approvePath(context, viewModel);
+                          },
+                          child: const Text(
+                            "Approve",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
   void _approvePath(
     BuildContext context,
     LearningPathViewModel viewModel,
@@ -278,20 +371,27 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
     Color? color,
   }) {
     final buttonColor = color ?? kPrimary;
+
     return SizedBox(
-      height: 58,
+      height: 56,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           foregroundColor: buttonColor,
-          side: BorderSide(color: buttonColor, width: 2.4),
+          side: BorderSide(color: buttonColor, width: 2.2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 8), // smaller padding
         ),
         onPressed: onPressed,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
         ),
       ),
     );
@@ -302,19 +402,25 @@ class _LearningPathsDetailViewState extends State<LearningPathsDetailView> {
     required VoidCallback onPressed,
   }) {
     return SizedBox(
-      height: 58,
+      height: 56,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.redAccent,
           side: const BorderSide(color: Colors.redAccent, width: 2.2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
         onPressed: onPressed,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
         ),
       ),
     );

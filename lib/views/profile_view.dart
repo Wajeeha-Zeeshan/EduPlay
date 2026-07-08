@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../models/teacher_model.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import 'logout_view.dart';
+import 'home_view.dart';
 
 const Color kBg = Color(0xFFFFF4D4);
 const Color kPrimary = Color(0xFFFFB300);
@@ -333,20 +334,73 @@ class ProfileView extends StatelessWidget {
       if (vm.errorMessage == null) {
         await showDialog(
           context: context,
+          barrierDismissible: false,
           builder:
               (context) => AlertDialog(
-                title: const Text("Deleted"),
-                content: const Text("Your profile was deleted successfully."),
-                actions: [
-                  TextButton(
-                    onPressed:
-                        () => Navigator.popUntil(
-                          context,
-                          (route) => route.isFirst,
+                backgroundColor: kWhite,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                contentPadding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: kPrimary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Text(
+                        "Profile Deleted",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: kWhite,
                         ),
-                    child: const Text("OK"),
-                  ),
-                ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    const Text(
+                      "Your profile was deleted successfully.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, height: 1.5),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimary,
+                          foregroundColor: kWhite,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const HomePage()),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text(
+                          "OK",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
         );
       }

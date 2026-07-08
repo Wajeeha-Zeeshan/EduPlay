@@ -131,7 +131,7 @@ class _LearningPathsPageState extends State<LearningPathsPage> {
           "Learning Paths",
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Center(
         child: SingleChildScrollView(
